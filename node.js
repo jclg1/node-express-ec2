@@ -1,8 +1,12 @@
 // Import necessary modules
 const express = require('express');
 const mysql = require('mysql2');
+const bodyParser = require('body-parser'); // Import body-parser
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3306;
+
+// Use body-parser middleware to parse JSON requests
+app.use(bodyParser.json());
 
 // MySQL Database Connection
 const connection = mysql.createConnection({
@@ -21,14 +25,20 @@ connection.connect((err) => {
 });
 
 // Define your API routes here
-app.get('/api/data', (req, res) => {
-  connection.query('SELECT * FROM users', (err, results) => {
+app.post('/api/insert-data', (req, res) => {
+  const { description, color, dateIn, receiptNote } = req.body;
+
+  const query = 'INSERT INTO work_orders (description, color, dateIn, receiptNote) VALUES (?, ?, ?, ?)';
+  const values = [description, color, dateIn, receiptNote];
+
+  connection.query(query, values, (err, result) => {
     if (err) {
-      console.error('Error querying database:', err);
+      console.error('Error inserting data into the database:', err);
       res.status(500).json({ error: 'Database error' });
       return;
     }
-    res.json(results);
+
+    res.json({ message: 'Data inserted successfully' });
   });
 });
 
